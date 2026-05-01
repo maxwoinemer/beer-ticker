@@ -20,6 +20,7 @@
     .tabs { display:flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin:0 auto 20px; max-width:480px; }
     .tab { flex:1; border:0; padding:10px 14px; border-radius:8px; background:transparent; color:var(--gray-light); font:600 14px 'Spline Sans'; cursor:pointer; }
     .tab.active { background:var(--gold); color:var(--black); }
+    .category-headline { font:600 22px/1.2 'IBM Plex Serif',Georgia,serif; color:var(--gold); text-align:center; margin:0 0 16px; }
     .grid { display:grid; gap:16px; grid-template-columns:1fr; }
     @media (min-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
     @media (min-width:960px){ .grid{ grid-template-columns:repeat(3,1fr); } }
@@ -52,6 +53,7 @@
       <button class="tab active" data-tab="Hahn">Am Hahn</button>
       <button class="tab" data-tab="Flasche">Auf der Flasche</button>
     </nav>
+    <h2 id="category-headline" class="category-headline">Am Hahn</h2>
     <section id="list" class="grid"><div class="empty">Wird geladen...</div></section>
     <h2 id="soon-title" class="section-title" style="display:none;">Demnächst verfügbar</h2>
     <section id="soon" class="grid"></section>
@@ -107,6 +109,9 @@
       const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
       const visible = state.beers.filter(b => inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status));
       const soon = state.beers.filter(b => inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable));
+      document.getElementById('category-headline').textContent = state.tab === 'Flasche'
+        ? (state.config.PUBLIC_FLASCHE_HEADLINE || 'Auf der Flasche')
+        : (state.config.PUBLIC_HAHN_HEADLINE || 'Am Hahn');
       document.getElementById('list').innerHTML = visible.length ? visible.map(card).join('') : '<div class="empty">Aktuell sind keine Biere in dieser Kategorie verfügbar.</div>';
       document.getElementById('soon-title').style.display = soon.length ? '' : 'none';
       document.getElementById('soon').innerHTML = soon.map(card).join('');
