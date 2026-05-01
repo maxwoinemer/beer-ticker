@@ -84,7 +84,7 @@
       let badge = beer.status === 'neu' ? '<span class="badge neu">Neu</span>' : '';
       if (beer.status === 'geplant' && beer.verfuegbarAb) badge = `<span class="badge plan">Ab ${date(beer.verfuegbarAb)}</span>`;
       if (beer.isTemporarilyUnavailable) badge = `<span class="badge outb">Vorübergehend nicht verfügbar${beer.tempNichtVerfuegbarBis ? ' bis ' + date(beer.tempNichtVerfuegbarBis) : ''}</span>`;
-      if (beer.status === 'ausverkauft') badge = '<span class="badge outb">Ausverkauft</span>';
+      if (beer.status === 'ausverkauft') badge = '<span class="badge outb">Ausgetrunken</span>';
       return `<article class="card${beer.status === 'ausverkauft' || beer.isTemporarilyUnavailable ? ' out' : ''}">
         ${image(beer)}
         <div><div class="title">${esc(beer.name)}</div><div class="meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div></div>
@@ -93,11 +93,17 @@
         ${beer.shopUrl ? `<a class="btn" href="${esc(beer.shopUrl)}" target="_blank" rel="noopener">Jetzt kaufen</a>` : ''}
       </article>`;
     }
+    function notifyHeight() {
+      try {
+        parent.postMessage({ type: 'beerTickerHeight', height: document.documentElement.scrollHeight }, '*');
+      } catch (e) {}
+    }
     function render() {
       if (String(state.config.FEATURE_PUBLIC_VIEW || 'TRUE').toUpperCase() !== 'TRUE') {
         document.getElementById('list').innerHTML = '<div class="empty">Die öffentliche Bieransicht ist aktuell deaktiviert.</div>';
         document.getElementById('soon-title').style.display = 'none';
         document.getElementById('soon').innerHTML = '';
+        notifyHeight();
         return;
       }
       const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
@@ -106,6 +112,7 @@
       document.getElementById('list').innerHTML = visible.length ? visible.map(card).join('') : '<div class="empty">Aktuell sind keine Biere in dieser Kategorie verfügbar.</div>';
       document.getElementById('soon-title').style.display = soon.length ? '' : 'none';
       document.getElementById('soon').innerHTML = soon.map(card).join('');
+      notifyHeight();
     }
     function load() {
       if (GAS_API_URL.indexOf('PASTE_') === 0) {
@@ -135,6 +142,8 @@
     }));
     load();
     setInterval(load, 15000);
+    window.addEventListener('load', notifyHeight);
+    window.addEventListener('resize', notifyHeight);
   </script>
 </body>
 </html>
