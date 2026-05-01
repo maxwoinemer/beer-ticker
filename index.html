@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unsere Biere</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600&family=Spline+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold:#BA9F5D; --gold-light:#d1b874; --black:#0a0a0a; --dark:#111;
+      --card:#1a1a1a; --border:#262626; --white:#fff; --gray:#7A7A7A;
+      --gray-light:#a3a3a3; --green:#61CE70; --red:#E05555; --orange:#E09955;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:var(--black); color:var(--white); font-family:'Spline Sans',system-ui,sans-serif; }
+    .wrap { max-width:1200px; margin:0 auto; padding:16px; }
+    .head { text-align:center; padding:10px 0 22px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+    .logo { width:84px; height:84px; object-fit:contain; display:none; margin:0 auto 12px; }
+    h1 { font-family:'IBM Plex Serif',Georgia,serif; color:var(--gold); font-size:26px; margin:0 0 4px; font-weight:600; letter-spacing:0; }
+    .sub { color:var(--gray-light); margin:0; }
+    .tabs { display:flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin:0 auto 20px; max-width:480px; }
+    .tab { flex:1; border:0; padding:10px 14px; border-radius:8px; background:transparent; color:var(--gray-light); font:600 14px 'Spline Sans'; cursor:pointer; }
+    .tab.active { background:var(--gold); color:var(--black); }
+    .grid { display:grid; gap:16px; grid-template-columns:1fr; }
+    @media (min-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+    @media (min-width:960px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+    @media (min-width:1200px){ .grid{ grid-template-columns:repeat(4,1fr); } }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .card.out { opacity:.62; }
+    .img { aspect-ratio:1/1; background:var(--dark); border-radius:8px; display:flex; align-items:center; justify-content:center; padding:10px; overflow:hidden; color:rgba(186,159,93,.5); font:600 32px 'IBM Plex Serif'; }
+    .img img { width:100%; height:100%; object-fit:contain; display:block; }
+    .title { font:600 18px/1.2 'IBM Plex Serif',Georgia,serif; }
+    .meta { color:var(--gray); font-size:12px; display:flex; flex-wrap:wrap; gap:6px; }
+    .meta span:not(:last-child)::after { content:'·'; margin-left:6px; }
+    .desc { color:var(--gray-light); font-size:14px; margin:0; }
+    .badge { display:inline-flex; width:max-content; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border:1px solid transparent; }
+    .neu { color:var(--green); border-color:rgba(97,206,112,.3); background:rgba(97,206,112,.12); }
+    .plan { color:var(--orange); border-color:rgba(224,153,85,.3); background:rgba(224,153,85,.1); }
+    .outb { color:var(--red); border-color:rgba(224,85,85,.3); background:rgba(224,85,85,.1); }
+    .btn { margin-top:auto; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border-radius:8px; padding:10px 16px; background:var(--gold); color:var(--black); font-weight:700; }
+    .btn:hover { background:var(--gold-light); }
+    .section-title { font:700 16px 'IBM Plex Serif'; color:var(--gold); margin:32px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.08em; }
+    .empty { text-align:center; color:var(--gray); border:1px dashed var(--border); border-radius:8px; padding:36px 20px; background:rgba(255,255,255,.01); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <img id="logo" class="logo" alt="Woinemer Hausbrauerei Logo">
+      <h1 id="headline">Unsere Biere</h1>
+      <p id="subline" class="sub">Frisch gebraut in Weinheim an der Bergstraße</p>
+    </header>
+    <nav class="tabs" aria-label="Kategorie">
+      <button class="tab active" data-tab="Hahn">Am Hahn</button>
+      <button class="tab" data-tab="Flasche">Auf der Flasche</button>
+    </nav>
+    <section id="list" class="grid"><div class="empty">Wird geladen...</div></section>
+    <h2 id="soon-title" class="section-title" style="display:none;">Demnächst verfügbar</h2>
+    <section id="soon" class="grid"></section>
+  </main>
+  <script>
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx77VOqR25tfwejB3MjWosFDMZQoIa3rY_8L7ZsjN4iCJ21eZ1Ho5EQqrg_ZZWE3Zb4Gw/exec?view=public';
+    const state = { tab: 'Hahn', beers: [], config: {} };
+
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function date(iso) {
+      const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m ? `${m[3]}.${m[2]}.${m[1]}` : esc(iso);
+    }
+    function initials(name) {
+      const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return 'W';
+      return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    function image(beer) {
+      return beer.bildUrl
+        ? `<div class="img"><img src="${esc(beer.bildUrl)}" alt="${esc(beer.name)}" loading="lazy" referrerpolicy="no-referrer"></div>`
+        : `<div class="img">${esc(initials(beer.name))}</div>`;
+    }
+    function card(beer) {
+      const meta = [beer.linie, beer.stil, beer.abv !== null && beer.abv !== '' ? String(beer.abv).replace('.', ',') + ' %' : ''].filter(Boolean);
+      let badge = beer.status === 'neu' ? '<span class="badge neu">Neu</span>' : '';
+      if (beer.status === 'geplant' && beer.verfuegbarAb) badge = `<span class="badge plan">Ab ${date(beer.verfuegbarAb)}</span>`;
+      if (beer.isTemporarilyUnavailable) badge = `<span class="badge outb">Vorübergehend nicht verfügbar${beer.tempNichtVerfuegbarBis ? ' bis ' + date(beer.tempNichtVerfuegbarBis) : ''}</span>`;
+      if (beer.status === 'ausverkauft') badge = '<span class="badge outb">Ausverkauft</span>';
+      return `<article class="card${beer.status === 'ausverkauft' || beer.isTemporarilyUnavailable ? ' out' : ''}">
+        ${image(beer)}
+        <div><div class="title">${esc(beer.name)}</div><div class="meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div></div>
+        ${beer.beschreibung ? `<p class="desc">${esc(beer.beschreibung)}</p>` : ''}
+        ${badge}
+        ${beer.shopUrl ? `<a class="btn" href="${esc(beer.shopUrl)}" target="_blank" rel="noopener">Jetzt kaufen</a>` : ''}
+      </article>`;
+    }
+    function render() {
+      if (String(state.config.FEATURE_PUBLIC_VIEW || 'TRUE').toUpperCase() !== 'TRUE') {
+        document.getElementById('list').innerHTML = '<div class="empty">Die öffentliche Bieransicht ist aktuell deaktiviert.</div>';
+        document.getElementById('soon-title').style.display = 'none';
+        document.getElementById('soon').innerHTML = '';
+        return;
+      }
+      const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
+      const visible = state.beers.filter(b => inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status));
+      const soon = state.beers.filter(b => inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable));
+      document.getElementById('list').innerHTML = visible.length ? visible.map(card).join('') : '<div class="empty">Aktuell sind keine Biere in dieser Kategorie verfügbar.</div>';
+      document.getElementById('soon-title').style.display = soon.length ? '' : 'none';
+      document.getElementById('soon').innerHTML = soon.map(card).join('');
+    }
+    function load() {
+      if (GAS_API_URL.indexOf('PASTE_') === 0) {
+        document.getElementById('list').innerHTML = '<div class="empty">Bitte GAS_API_URL in index.html setzen.</div>';
+        return;
+      }
+      const cb = 'btPublicApi' + Date.now();
+      window[cb] = function (payload) {
+        delete window[cb];
+        state.config = payload.config || {};
+        state.beers = payload.beers || [];
+        const logo = document.getElementById('logo');
+        if (state.config.LOGO_URL) { logo.src = state.config.LOGO_URL; logo.style.display = 'block'; }
+        document.getElementById('headline').textContent = state.config.PUBLIC_HEADLINE || 'Unsere Biere';
+        document.getElementById('subline').textContent = state.config.PUBLIC_SUBLINE || '';
+        render();
+      };
+      const script = document.createElement('script');
+      script.src = GAS_API_URL + (GAS_API_URL.indexOf('?') > -1 ? '&' : '?') + 'callback=' + cb;
+      script.onerror = function () { document.getElementById('list').innerHTML = '<div class="empty">Daten gerade nicht verfügbar.</div>'; };
+      document.body.appendChild(script);
+    }
+    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', function () {
+      state.tab = btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    }));
+    load();
+    setInterval(load, 15000);
+  </script>
+</body>
+</html>
