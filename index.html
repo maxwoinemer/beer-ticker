@@ -37,6 +37,7 @@
     .neu { color:var(--green); border-color:rgba(97,206,112,.3); background:rgba(97,206,112,.12); }
     .plan { color:var(--orange); border-color:rgba(224,153,85,.3); background:rgba(224,153,85,.1); }
     .outb { color:var(--red); border-color:rgba(224,85,85,.3); background:rgba(224,85,85,.1); }
+    .saison { color:var(--gold-light); border-color:rgba(186,159,93,.65); background:rgba(186,159,93,.18); }
     .btn { margin-top:auto; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border-radius:8px; padding:10px 16px; background:var(--gold); color:var(--black); font-weight:700; }
     .btn:hover { background:var(--gold-light); }
     .section-title { font:700 16px 'IBM Plex Serif'; color:var(--gold); margin:32px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.08em; }
@@ -85,10 +86,12 @@
       if (beer.status === 'geplant' && beer.verfuegbarAb) badge = `<span class="badge plan">Ab ${date(beer.verfuegbarAb)}</span>`;
       if (beer.isTemporarilyUnavailable) badge = `<span class="badge outb">Vorübergehend nicht verfügbar${beer.tempNichtVerfuegbarBis ? ' bis ' + date(beer.tempNichtVerfuegbarBis) : ''}</span>`;
       if (beer.status === 'ausverkauft') badge = '<span class="badge outb">Ausgetrunken</span>';
+      const saisonBadge = beer.saisonbier ? '<span class="badge saison">Saisonbier</span>' : '';
       return `<article class="card${beer.status === 'ausverkauft' || beer.isTemporarilyUnavailable ? ' out' : ''}">
         ${image(beer)}
         <div><div class="title">${esc(beer.name)}</div><div class="meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div></div>
         ${beer.beschreibung ? `<p class="desc">${esc(beer.beschreibung)}</p>` : ''}
+        ${saisonBadge}
         ${badge}
         ${beer.shopUrl ? `<a class="btn" href="${esc(beer.shopUrl)}" target="_blank" rel="noopener">Jetzt kaufen</a>` : ''}
       </article>`;
