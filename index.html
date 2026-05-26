@@ -89,9 +89,9 @@
       const saisonBadge = beer.saisonbier ? '<span class="badge saison">Saisonbier</span>' : '';
       return `<article class="card${beer.status === 'ausverkauft' || beer.isTemporarilyUnavailable ? ' out' : ''}">
         ${image(beer)}
+        ${saisonBadge}
         <div><div class="title">${esc(beer.name)}</div><div class="meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div></div>
         ${beer.beschreibung ? `<p class="desc">${esc(beer.beschreibung)}</p>` : ''}
-        ${saisonBadge}
         ${badge}
         ${beer.shopUrl ? `<a class="btn" href="${esc(beer.shopUrl)}" target="_blank" rel="noopener">Jetzt kaufen</a>` : ''}
       </article>`;
