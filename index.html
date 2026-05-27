@@ -115,8 +115,9 @@
         return;
       }
       const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
-      const visible = state.beers.filter(b => inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status));
-      const soon = state.beers.filter(b => inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable));
+      const publicBeer = b => b.publicVisible !== false;
+      const visible = state.beers.filter(b => publicBeer(b) && inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status));
+      const soon = state.beers.filter(b => publicBeer(b) && inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable));
       document.getElementById('category-headline').textContent = state.tab === 'Flasche'
         ? (state.config.PUBLIC_FLASCHE_HEADLINE || 'Auf der Flasche')
         : (state.config.PUBLIC_HAHN_HEADLINE || 'Am Hahn');
