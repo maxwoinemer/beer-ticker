@@ -70,6 +70,16 @@
       const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
       return m ? `${m[3]}.${m[2]}.${m[1]}` : esc(iso);
     }
+    function compareBeers(a, b) {
+      const posa = a.position === null || a.position === undefined || a.position === '' ? Infinity : Number(a.position);
+      const posb = b.position === null || b.position === undefined || b.position === '' ? Infinity : Number(b.position);
+      if (posa !== posb) return posa - posb;
+      const prio = { 'neu': 0, 'verfügbar': 1, 'geplant': 2, 'ausverkauft': 3 };
+      const pa = prio[a.status] ?? 9;
+      const pb = prio[b.status] ?? 9;
+      if (pa !== pb) return pa - pb;
+      return String(a.name || '').localeCompare(String(b.name || ''), 'de');
+    }
     function initials(name) {
       const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
       if (!parts.length) return 'W';
@@ -116,8 +126,8 @@
       }
       const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
       const publicBeer = b => b.publicVisible !== false;
-      const visible = state.beers.filter(b => publicBeer(b) && inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status));
-      const soon = state.beers.filter(b => publicBeer(b) && inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable));
+      const visible = state.beers.filter(b => publicBeer(b) && inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status)).sort(compareBeers);
+      const soon = state.beers.filter(b => publicBeer(b) && inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable)).sort(compareBeers);
       document.getElementById('category-headline').textContent = state.tab === 'Flasche'
         ? (state.config.PUBLIC_FLASCHE_HEADLINE || 'Auf der Flasche')
         : (state.config.PUBLIC_HAHN_HEADLINE || 'Am Hahn');
