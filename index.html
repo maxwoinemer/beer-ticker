@@ -75,9 +75,14 @@
       if (!parts.length) return 'W';
       return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
+    function imageUrl(beer) {
+      if (state.tab === 'Flasche') return beer.bildUrlFlasche || beer.bildUrl || beer.bildUrlHahn || '';
+      return beer.bildUrlHahn || beer.bildUrl || beer.bildUrlFlasche || '';
+    }
     function image(beer) {
-      return beer.bildUrl
-        ? `<div class="img"><img src="${esc(beer.bildUrl)}" alt="${esc(beer.name)}" loading="lazy" referrerpolicy="no-referrer"></div>`
+      const url = imageUrl(beer);
+      return url
+        ? `<div class="img"><img src="${esc(url)}" alt="${esc(beer.name)}" loading="lazy" referrerpolicy="no-referrer"></div>`
         : `<div class="img">${esc(initials(beer.name))}</div>`;
     }
     function card(beer) {
