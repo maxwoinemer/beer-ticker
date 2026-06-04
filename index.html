@@ -86,6 +86,24 @@
       if (!parts.length) return 'W';
       return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
+    const CATEGORIES = ['Hahn', 'Flasche', 'Bierbrunnen'];
+    function categoryValues(beerOrKategorie) {
+      if (beerOrKategorie && typeof beerOrKategorie === 'object' && Array.isArray(beerOrKategorie.kategorien)) {
+        return CATEGORIES.filter(k => beerOrKategorie.kategorien.includes(k));
+      }
+      const raw = beerOrKategorie && typeof beerOrKategorie === 'object' ? beerOrKategorie.kategorie : beerOrKategorie;
+      const seen = new Set();
+      String(raw || '').split(/[|,;]/).forEach(part => {
+        const k = part.trim();
+        if (!k) return;
+        if (k === 'Beides' || k.toLowerCase() === 'alle') CATEGORIES.forEach(cat => seen.add(cat));
+        if (CATEGORIES.includes(k)) seen.add(k);
+      });
+      return CATEGORIES.filter(k => seen.has(k));
+    }
+    function inTab(beer) {
+      return categoryValues(beer).includes(state.tab);
+    }
     function imageUrl(beer) {
       if (state.tab === 'Flasche') return beer.bildUrlFlasche || beer.bildUrl || beer.bildUrlHahn || '';
       if (state.tab === 'Bierbrunnen') return beer.bildUrl || beer.bildUrlHahn || beer.bildUrlFlasche || '';
@@ -126,7 +144,6 @@
         notifyHeight();
         return;
       }
-      const inTab = b => b.kategorie === state.tab || b.kategorie === 'Beides';
       const publicBeer = b => b.publicVisible !== false;
       const visible = state.beers.filter(b => publicBeer(b) && inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status)).sort(compareBeers);
       const soon = state.beers.filter(b => publicBeer(b) && inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable)).sort(compareBeers);
