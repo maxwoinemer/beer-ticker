@@ -17,7 +17,7 @@
     .head { text-align:center; padding:10px 0 22px; border-bottom:1px solid var(--border); margin-bottom:20px; }
     h1 { font-family:'IBM Plex Serif',Georgia,serif; color:var(--gold); font-size:26px; margin:0 0 4px; font-weight:600; letter-spacing:0; }
     .sub { color:var(--gray-light); margin:0; }
-    .tabs { display:flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin:0 auto 20px; max-width:480px; }
+    .tabs { display:flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin:0 auto 20px; max-width:640px; }
     .tab { flex:1; border:0; padding:10px 14px; border-radius:8px; background:transparent; color:var(--gray-light); font:600 14px 'Spline Sans'; cursor:pointer; }
     .tab.active { background:var(--gold); color:var(--black); }
     .category-headline { color:var(--gray-light); font-size:14px; font-weight:400; text-align:center; margin:-12px 0 20px; }
@@ -53,6 +53,7 @@
     <nav class="tabs" aria-label="Kategorie">
       <button class="tab active" data-tab="Hahn">Am Hahn</button>
       <button class="tab" data-tab="Flasche">Auf der Flasche</button>
+      <button class="tab" data-tab="Bierbrunnen">Bierbrunnen</button>
     </nav>
     <p id="category-headline" class="category-headline">Am Hahn</p>
     <section id="list" class="grid"><div class="empty">Wird geladen...</div></section>
@@ -87,6 +88,7 @@
     }
     function imageUrl(beer) {
       if (state.tab === 'Flasche') return beer.bildUrlFlasche || beer.bildUrl || beer.bildUrlHahn || '';
+      if (state.tab === 'Bierbrunnen') return beer.bildUrl || beer.bildUrlHahn || beer.bildUrlFlasche || '';
       return beer.bildUrlHahn || beer.bildUrl || beer.bildUrlFlasche || '';
     }
     function image(beer) {
@@ -128,9 +130,12 @@
       const publicBeer = b => b.publicVisible !== false;
       const visible = state.beers.filter(b => publicBeer(b) && inTab(b) && !b.isTemporarilyUnavailable && ['verfügbar','neu','ausverkauft'].includes(b.status)).sort(compareBeers);
       const soon = state.beers.filter(b => publicBeer(b) && inTab(b) && (b.status === 'geplant' || b.isTemporarilyUnavailable)).sort(compareBeers);
-      document.getElementById('category-headline').textContent = state.tab === 'Flasche'
-        ? (state.config.PUBLIC_FLASCHE_HEADLINE || 'Auf der Flasche')
-        : (state.config.PUBLIC_HAHN_HEADLINE || 'Am Hahn');
+      const categoryHeadlines = {
+        Hahn: state.config.PUBLIC_HAHN_HEADLINE || 'Am Hahn',
+        Flasche: state.config.PUBLIC_FLASCHE_HEADLINE || 'Auf der Flasche',
+        Bierbrunnen: state.config.PUBLIC_BIERBRUNNEN_HEADLINE || 'Bierbrunnen'
+      };
+      document.getElementById('category-headline').textContent = categoryHeadlines[state.tab] || state.tab;
       document.getElementById('list').innerHTML = visible.length ? visible.map(card).join('') : '<div class="empty">Aktuell sind keine Biere in dieser Kategorie verfügbar.</div>';
       document.getElementById('soon-title').style.display = soon.length ? '' : 'none';
       document.getElementById('soon').innerHTML = soon.map(card).join('');
